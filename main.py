@@ -8,9 +8,12 @@ def main_menu():
     print("2. Train a Model")
     print("3. Evaluate a Model")
     print("4. Load Prebuilt Dataset")
-    print("5. Exit")
+    print("5. Explain Model")
+    print("6. Deploy Model")
+    print("7. Train Text Classification Model")
+    print("8. Exit")
 
-    choice = input("Enter your choice (1-5): ")
+    choice = input("Enter your choice (1-8): ")
     if choice == "1":
         from scripts.preprocess import preprocess_data
         preprocess_data()
@@ -27,15 +30,21 @@ def main_menu():
         df = load_prebuilt_dataset(dataset_name)
         if df is not None:
             save_prebuilt_dataset(df, target_column="target")
-
     elif choice == "5":
+        from scripts.explain_model import explain_model
+        explain_model()
+    elif choice == "6":
+        print("Starting Flask app for model deployment...")
+        os.system("python scripts/deploy_model.py")  # Launch Flask API
+    elif choice == "7":
+        from scripts.text_classification import train_text_classification
+        train_text_classification()
+    elif choice == "8":
         print("Exiting SimpleAI. Goodbye!")
         sys.exit()
-
     else:
         print("Invalid choice. Please try again.")
         main_menu()
-
 
 if __name__ == "__main__":
     main_menu()

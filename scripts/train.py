@@ -1,8 +1,9 @@
 import os
 import pandas as pd
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.linear_model import LogisticRegression, LinearRegression
+from sklearn.metrics import accuracy_score, r2_score
 from utils.model_utils import save_model
 
 def train_model():
@@ -27,54 +28,53 @@ def train_model():
 
     if task_type == "1":
         # Classification models
-        from sklearn.tree import DecisionTreeClassifier
-        from sklearn.ensemble import RandomForestClassifier
         models = {
-            "Decision Tree": DecisionTreeClassifier(random_state=42),
-            "Random Forest": RandomForestClassifier(random_state=42)
+            "Decision Tree": DecisionTreeClassifier,
+            "Random Forest": RandomForestClassifier
         }
         metric_name = "Accuracy"
+        metric_function = accuracy_score
     elif task_type == "2":
         # Regression models
         models = {
-            "Decision Tree Regressor": DecisionTreeRegressor(random_state=42),
-            "Linear Regression": LinearRegression()
+            "Decision Tree Regressor": DecisionTreeRegressor,
+            "Random Forest Regressor": RandomForestRegressor
         }
         metric_name = "R2 Score"
+        metric_function = r2_score
 
-    # Step 3: Train and evaluate each model
-    best_model = None
-    best_metric = float("-inf")
-    best_model_name = ""
+    # Step 3: Choose model and hyperparameters
+    print("\nAvailable Models:")
+    for i, model_name in enumerate(models.keys(), 1):
+        print(f"{i}. {model_name}")
+    model_choice = input("Select a model: ").strip()
+    model_name = list(models.keys())[int(model_choice) - 1]
+    model_class = models[model_name]
 
-    for model_name, model in models.items():
-        print(f"\nTraining {model_name}...")
-        model.fit(X_train, y_train.values.ravel())
-        print(f"{model_name} training complete!")
+    # Prompt for hyperparameters
+    print(f"\nCustomizing hyperparameters for {model_name}...")
+    if "Decision Tree" in model_name:
+        max_depth = int(input("Enter max_depth (or -1 for no limit): ").strip())
+        model = model_class(max_depth=max_depth if max_depth > 0 else None)
+    elif "Random Forest" in model_name:
+        n_estimators = int(input("Enter n_estimators (default 100): ").strip())
+        model = model_class(n_estimators=n_estimators)
+    else:
+        model = model_class()
 
-        # Evaluate the model
-        predictions = model.predict(X_test)
-        if task_type == "1":
-            # Classification metrics
-            from sklearn.metrics import accuracy_score
-            metric = accuracy_score(y_test, predictions)
-        elif task_type == "2":
-            # Regression metrics
-            metric = r2_score(y_test, predictions)
+    # Step 4: Train and evaluate the model
+    print(f"\nTraining {model_name}...")
+    model.fit(X_train, y_train.values.ravel())
+    print(f"{model_name} training complete!")
 
-        print(f"{model_name} {metric_name}: {metric:.4f}")
+    # Evaluate the model
+    predictions = model.predict(X_test)
+    metric = metric_function(y_test, predictions)
+    print(f"{model_name} {metric_name}: {metric:.4f}")
 
-        # Update the best model
-        if metric > best_metric:
-            best_model = model
-            best_metric = metric
-            best_model_name = model_name
-
-    # Step 4: Save the best model
-    if best_model:
-        model_path = f"models/{best_model_name.replace(' ', '_').lower()}_model.pkl"
-        save_model(best_model, model_path)
-        print(f"\nBest Model: {best_model_name} with {metric_name}: {best_metric:.4f}")
-        print(f"Model saved as '{model_path}'.")
+    # Save the model
+    model_path = f"models/{model_name.replace(' ', '_').lower()}_model.pkl"
+    save_model(model, model_path)
+    print(f"Model saved as '{model_path}'.")
 
     print("\nTraining complete!\n")

@@ -8,7 +8,8 @@ def main_menu():
     print("2. Train a Model")
     print("3. Evaluate a Model")
     print("4. Load Prebuilt Dataset")
-    print("5. Exit")
+    print("5. Explain Model")
+    print("6. Exit")
 
     choice = input("Enter your choice (1-5): ")
     if choice == "1":
@@ -27,8 +28,12 @@ def main_menu():
         df = load_prebuilt_dataset(dataset_name)
         if df is not None:
             save_prebuilt_dataset(df, target_column="target")
-
     elif choice == "5":
+        from scripts.explain_model import explain_model
+        explain_model()
+
+
+    elif choice == "6":
         print("Exiting SimpleAI. Goodbye!")
         sys.exit()
 

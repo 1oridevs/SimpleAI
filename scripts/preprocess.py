@@ -24,24 +24,38 @@ def preprocess_data():
     print("\nDataset preview:")
     print(data.head())
 
-    # Step 4: Clean dataset (optional step for this version)
-    print("\nSkipping cleaning for now. Data assumed to be clean.")
+    # Step 4: Ask for the target column
+    target_column = input("\nEnter the target column name: ").strip()
+    if target_column not in data.columns:
+        print(f"Error: '{target_column}' not found in the dataset.")
+        return
 
-    # Step 5: Split dataset into training and testing sets
+    # Step 5: Convert non-numeric columns (excluding target column)
+    print("\nChecking for non-numeric columns...")
+    non_numeric_cols = data.select_dtypes(include=['object']).columns
+    non_numeric_cols = [col for col in non_numeric_cols if col != target_column]
+
+    if len(non_numeric_cols) > 0:
+        print(f"Found non-numeric columns: {list(non_numeric_cols)}")
+        for col in non_numeric_cols:
+            print(f"Converting '{col}' to numeric using one-hot encoding...")
+            one_hot = pd.get_dummies(data[col], prefix=col)
+            data = data.drop(col, axis=1)
+            data = pd.concat([data, one_hot], axis=1)
+        print("Non-numeric columns converted successfully.")
+    else:
+        print("No non-numeric columns found.")
+
+    # Step 6: Split dataset into training and testing sets
     try:
-        target_column = input("\nEnter the target column name: ").strip()
-        if target_column not in data.columns:
-            print(f"Error: '{target_column}' not found in the dataset.")
-            return
-
         print("\nSplitting data into training and testing sets...")
         X = data.drop(columns=[target_column])
-        y = data[target_column]
+        y = data[[target_column]]
 
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
         print("Data split successfully!")
 
-        # Step 6: Save preprocessed data
+        # Step 7: Save preprocessed data
         output_dir = "data"
         os.makedirs(output_dir, exist_ok=True)
         X_train.to_csv(f"{output_dir}/X_train.csv", index=False)

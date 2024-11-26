@@ -26,5 +26,6 @@ def main_menu():
         print("Invalid choice. Please try again.")
         main_menu()
 
+
 if __name__ == "__main__":
     main_menu()
